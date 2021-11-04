@@ -32,13 +32,21 @@ with open(notion_credentials_path) as credentials_file:
 client = NotionClient(token_v2=token_v2)
 # </editor-fold>
 
+# <editor-fold desc="reddit variables">
 url = 'https://www.reddit.com/r/passive_income/comments/lm1vnc/warren_buffett_says_if_you_dont_find_a_way_to/'
 # url = "https://www.reddit.com/r/passive_income/comments/lm1vnc/comment/gnspihn/"
-notion_page = client.get_block("https://www.notion.so/slavkosenkiv/test-notion_py-a7cfa4acd0284bb592ba271ffec21e83")
 submission = reddit.submission(url=url)
 submission.comment_sort = "top"
 submission.comments.replace_more(limit=None)
+# </editor-fold>
 comments_num = 0
+text = ''
+# <editor-fold desc="notion veriables">
+notion_table = client.get_collection_view("https://www.notion.so/slavkosenkiv/a805791e57204b63a4480712d06c824a?v=5538526eae9943f5a28210eb06ec1ecd")
+row = notion_table.collection.add_row()
+# </editor-fold>
+
+# <editor-fold desc="functions">
 
 
 def is_op(comment):
@@ -129,17 +137,18 @@ def comment_properties():
 
 
 def post_properties():
-    return f'''title: {submission.title}
-    subreddit: {submission.subreddit}
-    comments num: {submission.num_comments}
-    score: {submission.score}
-    created: {unix_to_human_time(submission)}
-    author: {submission.author}
-    text: {submission.selftext}
-    link: https://www.reddit.com{submission.permalink}\n'''
+    row.title = submission.title
+    row.subreddit = list(str(submission.subreddit))
+    """row.comments = submission.num_comments
+    row.score = submission.score
+    row.created = unix_to_human_time(submission)
+    row.author = submission.author
+    row.link = f'https://www.reddit.com{submission.permalink}'"""
+
+# </editor-fold>
 
 
-text = ''
+
 
 if '/gnspihn/' in url:
     saved_comment_id = reddit.comment(url=url)
@@ -150,12 +159,12 @@ if '/gnspihn/' in url:
     text += start_of_the_comment + rest_of_the_comment
 
 else:
-    text = post_properties()
-    text += post_properties()
-    go_deep()
+    post_properties()
+    # text = post_properties()
+    # text += post_properties()
+    # go_deep()
 
 
-newchild = notion_page.children.add_new(TextBlock, title=text)
 
 
 
