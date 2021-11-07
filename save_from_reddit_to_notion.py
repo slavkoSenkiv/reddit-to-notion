@@ -1,9 +1,8 @@
 import praw
 from praw.models import MoreComments
-from datetime import datetime
 from notion.client import NotionClient
 from notion.block import TextBlock
-import re
+import datetime
 
 # <editor-fold desc="get credentials and auth">
 reddit_credentials_path = '/Users/ysenkiv/Code/access files/personal/reddit/reddit auth.txt'
@@ -56,7 +55,7 @@ def is_op(comment):
 
 
 def unix_to_human_time(comment):
-    human_time = datetime.utcfromtimestamp(int(comment.created_utc)).strftime('%d.%m.%y')
+    human_time = datetime.datetime.utcfromtimestamp(int(comment.created_utc)).strftime('%d.%m.%y')
     return human_time
 
 
@@ -125,7 +124,7 @@ def go_deep():
                                                         print_comment(reply_12, 12)
 
 
-def comment_properties():
+def comment_properties_migration():
     return f'''this is saved submission comment or reply, not submission itself
         submission title: {submission.title}
         subreddit: {submission.subreddit}
@@ -136,33 +135,33 @@ def comment_properties():
         link: https://www.reddit.com{saved_comment_id.permalink}'''
 
 
-def post_properties():
+def post_properties_migration():
     row.title = submission.title
-    row.subreddit = list(str(submission.subreddit))
-    """row.comments = submission.num_comments
+    row.subreddit = str(submission.subreddit)
+    row.comments = submission.num_comments
     row.score = submission.score
-    row.created = unix_to_human_time(submission)
-    row.author = submission.author
-    row.link = f'https://www.reddit.com{submission.permalink}'"""
+    row.created = datetime.datetime.utcfromtimestamp(int(submission.created_utc)).date()
+    row.author = str(submission.author)
+    row.link = f'https://www.reddit.com{submission.permalink}'
+
 
 # </editor-fold>
 
 
-
-
 if '/gnspihn/' in url:
     saved_comment_id = reddit.comment(url=url)
-    text += comment_properties()
+    text += comment_properties_migration()
     go_deep()
     start_of_the_comment = saved_comment_id.body
     rest_of_the_comment = text.split(start_of_the_comment)[1]
     text += start_of_the_comment + rest_of_the_comment
-
 else:
-    post_properties()
-    # text = post_properties()
-    # text += post_properties()
-    # go_deep()
+    pass
+    # post_properties_migration()
+
+go_deep()
+row.children.add_new(TextBlock, title=text)
+
 
 
 
