@@ -1,6 +1,8 @@
 import praw
 from praw.models import MoreComments
 from notion.client import NotionClient
+from notion.block import NumberedListBlock
+import time
 from notion.block import TextBlock
 from notion.block import ToggleBlock
 import datetime
@@ -28,105 +30,73 @@ with open(notion_credentials_path) as credentials_file:
 client = NotionClient(token_v2=token_v2)
 # </editor-fold>
 # <editor-fold desc="reddit variables">
-url = 'https://www.reddit.com/r/WorkOnline/comments/qnpfsf/my_experience_with_appen_yn/'
+url = 'https://www.reddit.com/r/Python/comments/qon3cz/i_made_a_spotify_playlist_downloader/'
 # url = "https://www.reddit.com/r/passive_income/comments/lm1vnc/comment/gnspihn/"
 submission = reddit.submission(url=url)
 submission.comment_sort = "top"
 submission.comments.replace_more(limit=None)
 # </editor-fold>
 # <editor-fold desc="notion veriables">
-notion_page = client.get_block('https://www.notion.so/slavkosenkiv/test-page-6c252540395e433f83d3cd21dabfad9f')
+page = client.get_block('https://www.notion.so/slavkosenkiv/test-page-6c252540395e433f83d3cd21dabfad9f')
 # notion_table = client.get_collection_view("https://www.notion.so/slavkosenkiv/a805791e57204b63a4480712d06c824a?v=5538526eae9943f5a28210eb06ec1ecd")
 # row = notion_table.collection.add_row()
 # </editor-fold>
-text = ''
 # <editor-fold desc="functions">
 
 
-def print_comment(comment, indent):
-    global text
+def unix_to_human_time(comment):
+    human_time = datetime.datetime.utcfromtimestamp(int(comment.created_utc)).strftime('%d.%m.%y')
+    return human_time
+
+
+def is_op(comment):
+    if comment.is_submitter:
+        return 'is OP'
+    return ''
+
+
+def get_comment_info(comment):
     comment_text = comment.body.replace('\n', '')
-    text += f"{'|   ' * indent}{comment_text}\n"
+    comment_time = unix_to_human_time(comment)
+    text = f"{comment.score} | {comment_text}\n" \
+           f"{comment.author} {is_op(comment)}>{comment_time}\n"
+    return text
+
+
+def add(level, comment, block_type=NumberedListBlock):
+    child = level.children.add_new(block_type, title=get_comment_info(comment))
+    return child
 
 
 def go_deep():
     for reply_0 in submission.comments:
         if isinstance(reply_0, MoreComments):
             continue
-        print_comment(reply_0, 1)
+        note_1 = add(page, reply_0, ToggleBlock)
+
         for reply_1 in reply_0.replies:
             if isinstance(reply_1, MoreComments):
                 continue
-            print_comment(reply_1, 2)
+            note_2 = add(note_1, reply_1)
+
             for reply_2 in reply_1.replies:
                 if isinstance(reply_2, MoreComments):
                     continue
-                print_comment(reply_2, 3)
+                note_3 = add(note_2, reply_1)
+
                 for reply_3 in reply_2.replies:
                     if isinstance(reply_3, MoreComments):
                         continue
-                    print_comment(reply_3, 4)
+                    note_4 = add(note_3, reply_1)
+
                     for reply_4 in reply_3.replies:
                         if isinstance(reply_4, MoreComments):
                             continue
-                        print_comment(reply_4, 5)
-                        for reply_5 in reply_4.replies:
-                            if isinstance(reply_5, MoreComments):
-                                continue
-                            print_comment(reply_5, 6)
-                            for reply_6 in reply_5.replies:
-                                if isinstance(reply_6, MoreComments):
-                                    continue
-                                print_comment(reply_6, 7)
-                                for reply_7 in reply_6.replies:
-                                    if isinstance(reply_7, MoreComments):
-                                        continue
-                                    print_comment(reply_7, 8)
-                                    for reply_8 in reply_7.replies:
-                                        if isinstance(reply_8, MoreComments):
-                                            continue
-                                        print_comment(reply_8, 9)
-                                        for reply_9 in reply_8.replies:
-                                            if isinstance(reply_9, MoreComments):
-                                                continue
-                                            print_comment(reply_9, 10)
-                                            for reply_10 in reply_9.replies:
-                                                if isinstance(reply_10, MoreComments):
-                                                    continue
-                                                print_comment(reply_10, 1)
-                                                for reply_11 in reply_10.replies:
-                                                    if isinstance(reply_11, MoreComments):
-                                                        continue
-                                                    print_comment(reply_11, 12)
-                                                    for reply_12 in reply_11.replies:
-                                                        if isinstance(reply_12, MoreComments):
-                                                            continue
-                                                        print_comment(reply_12, 13)
-
-"""
-def comment_properties_migration():
-    return f'''this is saved submission comment or reply, not submission itself
-        submission title: {submission.title}
-        subreddit: {submission.subreddit}
-        comment score: {saved_comment_id.score}
-        comment created: {unix_to_human_time(saved_comment_id)}
-        comment author: {saved_comment_id.author}
-        comment text: {saved_comment_id.body}
-        link: https://www.reddit.com{saved_comment_id.permalink}'''
-"""
-"""def post_properties_migration():
-    row.title = submission.title
-    row.subreddit = str(submission.subreddit)
-    row.comments = submission.num_comments
-    row.score = submission.score
-    row.created = datetime.datetime.utcfromtimestamp(int(submission.created_utc)).date()
-    row.author = str(submission.author)
-    row.link = f'https://www.reddit.com{submission.permalink}'"""
+                        note_5 = add(note_4, reply_1)
 # </editor-fold>
 
+
 go_deep()
-print(text)
-notion_page.children.add_new(TextBlock, title=text)
 
 
 
