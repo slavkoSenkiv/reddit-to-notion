@@ -30,7 +30,7 @@ with open(notion_credentials_path) as credentials_file:
 client = NotionClient(token_v2=token_v2)
 # </editor-fold>
 # <editor-fold desc="reddit variables">
-url = 'https://www.reddit.com/r/Python/comments/qon3cz/i_made_a_spotify_playlist_downloader/'
+url = 'https://www.reddit.com/r/Fire/comments/qphl2s/a_subreddit_which_focuses_on_people_who_wish_to/'
 # url = "https://www.reddit.com/r/passive_income/comments/lm1vnc/comment/gnspihn/"
 submission = reddit.submission(url=url)
 submission.comment_sort = "top"
@@ -55,44 +55,6 @@ def is_op(comment):
     return ''
 
 
-def get_comment_info(comment):
-    comment_text = comment.body.replace('\n', '')
-    comment_time = unix_to_human_time(comment)
-    text = f"{comment.score} | {comment_text}\n" \
-           f"{comment.author} {is_op(comment)}>{comment_time}\n"
-    return text
-
-
-def add(level, comment, block_type=NumberedListBlock):
-    child = level.children.add_new(block_type, title=get_comment_info(comment))
-    return child
-
-
-def go_deep():
-    for reply_0 in submission.comments:
-        if isinstance(reply_0, MoreComments):
-            continue
-        note_1 = add(page, reply_0, ToggleBlock)
-
-        for reply_1 in reply_0.replies:
-            if isinstance(reply_1, MoreComments):
-                continue
-            note_2 = add(note_1, reply_1)
-
-            for reply_2 in reply_1.replies:
-                if isinstance(reply_2, MoreComments):
-                    continue
-                note_3 = add(note_2, reply_1)
-
-                for reply_3 in reply_2.replies:
-                    if isinstance(reply_3, MoreComments):
-                        continue
-                    note_4 = add(note_3, reply_1)
-
-                    for reply_4 in reply_3.replies:
-                        if isinstance(reply_4, MoreComments):
-                            continue
-                        note_5 = add(note_4, reply_1)
 # </editor-fold>
 
 
