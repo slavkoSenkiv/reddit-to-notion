@@ -102,7 +102,7 @@ def comment_properties_migration():
     row.title = submission.title
     row.type = get_reddit_content_type()
     row.subreddit = str(submission.subreddit)
-    row.score = get_content_piece_id().score
+    row.score = id_from_url(reddit_content_url).score
     row.comments = submission.num_comments
     row.author = str(submission.author)
     row.created = datetime.datetime.utcfromtimestamp(int(submission.created_utc)).date()
@@ -196,7 +196,11 @@ if 'context=3' not in reddit_content_url:  # is it post?
         post_properties_migration()
         go_deep_and_add_children()
 if 'context=3' in reddit_content_url:  # is it comment/reply?
-    pass
+    if save_format == '1':
+        comment_properties_migration()
+    if save_format == '2':
+        comment_properties_migration()
+
 
 
 
